@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart4Edit — Create Magic</title>
+<style>
+:root{--bg:#070916;--panel:#101329;--panel2:#151a35;--line:#252c53;--text:#f5f7ff;--muted:#9da7ca;--cyan:#4be8ff;--purple:#8a5cff;--pink:#ef5bff}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% -20%,#20245a 0%,var(--bg) 55%);color:var(--text);font:14px/1.45 Inter,system-ui,Segoe UI,Arial,sans-serif;min-height:100vh}
+button,input,select{font:inherit}button{cursor:pointer;border:1px solid var(--line);background:#171b37;color:var(--text);border-radius:10px;padding:10px 13px;transition:.18s}button:hover{border-color:var(--cyan);transform:translateY(-1px)}button:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.topbar{height:68px;display:flex;align-items:center;justify-content:space-between;padding:0 4vw;border-bottom:1px solid #23264b;background:#080b19d9;position:sticky;top:0;z-index:3;backdrop-filter:blur(16px)}
+.brand{display:flex;gap:10px;align-items:center;font-weight:850;font-size:22px;letter-spacing:-.7px}.brandmark{width:35px;height:35px;border-radius:11px;background:linear-gradient(135deg,var(--cyan),var(--purple),var(--pink));display:grid;place-items:center;color:#080a19;font-size:19px;box-shadow:0 0 25px #865aff55}.brand span{color:#a88aff}.topright{color:var(--muted);font-size:12px}
+main{max-width:1500px;margin:auto;padding:24px 3vw 40px}.hero{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:20px}.eyebrow{color:var(--cyan);text-transform:uppercase;letter-spacing:2px;font-size:11px;font-weight:800}.hero h1{font-size:clamp(27px,3.5vw,42px);line-height:1.05;margin:7px 0 8px;letter-spacing:-1.5px}.hero h1 em{font-style:normal;background:linear-gradient(90deg,var(--cyan),#9c83ff,var(--pink));color:transparent;background-clip:text}.hero p{color:var(--muted);margin:0;max-width:620px}
+.app{display:grid;grid-template-columns:220px minmax(300px,1fr) 260px;gap:13px;align-items:stretch}.panel{background:linear-gradient(160deg,#131731f5,#0d1023f5);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:0 15px 45px #0002}.panelhead{padding:14px 15px;border-bottom:1px solid var(--line);font-weight:750;display:flex;justify-content:space-between;align-items:center}.panelbody{padding:14px}
+.toolbtn{width:100%;display:flex;align-items:center;gap:10px;text-align:left;margin-bottom:7px;background:#11152c}.toolbtn b{font-size:17px;color:var(--cyan);width:23px;text-align:center}.toolbtn small{display:block;color:var(--muted);font-size:11px}.uploadbox{border:1px dashed #5b66a0;border-radius:12px;padding:18px 12px;text-align:center;background:#11152b;margin-bottom:13px}.uploadbox .uploadicon{font-size:28px;color:var(--cyan)}.uploadbox p{color:var(--muted);font-size:12px;margin:5px 0 12px}.primary{border:0;background:linear-gradient(100deg,#7a45ff,#327bff);box-shadow:0 5px 22px #754cff45;font-weight:800}.primary:hover{box-shadow:0 7px 28px #754cff70}.full{width:100%}.filemeta{font-size:11px;color:var(--muted);overflow-wrap:anywhere;margin-top:10px}
+.stage{display:flex;flex-direction:column;min-width:0}.stagebar{display:flex;gap:8px;align-items:center;justify-content:space-between;padding:11px 13px;border-bottom:1px solid var(--line);flex-wrap:wrap}.stagebar select{max-width:140px}.select, input[type="text"],input[type="number"],select{background:#0b0e20;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px;min-width:0}
+.canvaswrap{flex:1;min-height:330px;display:grid;place-items:center;padding:20px;background:radial-gradient(ellipse,#171c3c 0%,#090b18 70%);position:relative;overflow:hidden}.previewframe{position:relative;width:min(100%,700px);aspect-ratio:16/9;background:#03040a;border:1px solid #343b6a;border-radius:8px;overflow:hidden;box-shadow:0 0 45px #4c4dff18;display:grid;place-items:center}.previewframe.vertical{width:min(57%,350px);aspect-ratio:9/16}.previewframe.square{width:min(70%,480px);aspect-ratio:1/1}.previewframe video{width:100%;height:100%;object-fit:contain;display:block}.overlaytext{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:8%;font-size:clamp(18px,3vw,42px);font-weight:900;color:white;text-shadow:0 3px 12px #000,0 0 16px #000;pointer-events:none;overflow-wrap:anywhere}.placeholder{text-align:center;color:#b6bee1;padding:20px}.placeholder .magic{font-size:48px;filter:drop-shadow(0 0 15px #9860ff)}.placeholder h3{margin:7px 0}.placeholder p{color:var(--muted);font-size:12px;max-width:260px}
+.playbar{padding:12px 15px;display:flex;align-items:center;gap:10px;border-top:1px solid var(--line);flex-wrap:wrap}.playbtn{width:38px;height:38px;border-radius:50%;padding:0;background:linear-gradient(135deg,#8d54ff,#3e8cff);border:0;font-size:15px}.time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px}.seek{flex:1;min-width:80px;accent-color:var(--cyan)}
+.section{padding:14px;border-bottom:1px solid var(--line)}.section:last-child{border:0}.section h3{font-size:12px;text-transform:uppercase;letter-spacing:1px;color:#c3caff;margin:0 0 12px}.field{margin-bottom:13px}.field:last-child{margin-bottom:0}.field label{display:flex;justify-content:space-between;gap:10px;color:var(--muted);font-size:12px;margin-bottom:6px}.field input[type=range]{width:100%;accent-color:var(--purple)}.field input[type=text],.field select{width:100%}.two{display:grid;grid-template-columns:1fr 1fr;gap:8px}.hint{color:var(--muted);font-size:11px;line-height:1.5}.exportstatus{font-size:11px;color:var(--cyan);margin-top:9px;min-height:16px}.timeline{margin-top:13px}.timelinehead{display:flex;align-items:center;justify-content:space-between;padding:12px 15px;border-bottom:1px solid var(--line);font-weight:750}.timelinebody{padding:13px 15px}.tracklabel{display:flex;justify-content:space-between;color:var(--muted);font-size:11px;margin-bottom:7px}.track{height:36px;border-radius:7px;background:#0a0d1d;border:1px solid #252b50;position:relative;overflow:hidden}.trackfill{position:absolute;inset:0;background:repeating-linear-gradient(90deg,#5742ac 0 9%,#327bb4 9% 17%,#6d3e9c 17% 25%);opacity:.8}.playhead{position:absolute;top:0;bottom:0;width:2px;background:#fff;left:0%;box-shadow:0 0 8px #fff}.trimrow{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:13px}.footer{text-align:center;color:#777fa6;font-size:11px;padding:22px 0 0}.toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:#171d3c;border:1px solid #46518c;border-radius:12px;padding:11px 17px;box-shadow:0 10px 40px #0008;z-index:10;display:none;max-width:90vw}.badge{font-size:10px;padding:4px 7px;border:1px solid #36406f;border-radius:20px;color:#c7cbff}
+@media(max-width:1000px){.app{grid-template-columns:190px minmax(0,1fr)}.rightpanel{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr)}.rightpanel .panelhead{grid-column:1/-1}.rightpanel .section{border-bottom:0;border-right:1px solid var(--line)}}@media(max-width:650px){.topbar{padding:0 16px}.topright{display:none}main{padding:18px 12px}.hero{display:block}.hero .badge{display:inline-block;margin-top:12px}.app{grid-template-columns:1fr}.leftpanel{order:2}.stage{order:1}.rightpanel{order:3;display:block}.rightpanel .section{border-right:0;border-bottom:1px solid var(--line)}.canvaswrap{min-height:260px;padding:12px}.previewframe.vertical{width:min(65%,260px)}.previewframe.square{width:min(80%,320px)}.trimrow{grid-template-columns:1fr}.hero h1{letter-spacing:-.8px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><div class="brandmark">▶</div><div>Smart4<span>Edit</span></div></div>
+  <div class="topright">✦ Create magic. Instantly.</div>
+  <span class="badge">BROWSER EDITOR · FREE</span>
+</header>
+<main>
+  <section class="hero">
+    <div><div class="eyebrow">✦ Your creative studio</div><h1>Turn moments into <em>magic.</em></h1><p>A fast, simple video editor that runs right in your browser. Upload, style, trim and export — your files stay on your device.</p></div>
+    <span class="badge">NO INSTALLATION REQUIRED</span>
+  </section>
+  <section class="app">
+    <aside class="panel leftpanel">
+      <div class="panelhead">✦ Media Studio <span class="badge">01</span></div>
+      <div class="panelbody">
+        <div class="uploadbox"><div class="uploadicon">↥</div><strong>Bring your video</strong><p>Choose a video from your device</p><button class="primary full" id="uploadBtn">＋ Upload video</button><input id="videoFile" type="file" accept="video/*" hidden><div class="filemeta" id="filemeta">No video selected yet</div></div>
+        <button class="toolbtn" data-focus="text"><b>T</b><span>Text & titles<small>Add your own words</small></span></button>
+        <button class="toolbtn" data-focus="filters"><b>✧</b><span>Magic filters<small>Style your footage</small></span></button>
+        <button class="toolbtn" data-focus="trim"><b>◷</b><span>Trim video<small>Choose your best moment</small></span></button>
+        <button class="toolbtn" data-focus="export"><b>⇩</b><span>Export video<small>Save your creation</small></span></button>
+        <p class="hint" style="margin-top:16px">Tip: For the smoothest preview, try a short MP4 video first.</p>
+      </div>
+    </aside>
+    <section class="panel stage">
+      <div class="stagebar"><strong>Live canvas</strong><div style="display:flex;gap:7px;align-items:center"><select id="ratio" aria-label="Aspect ratio"><option value="wide">16:9 Landscape</option><option value="vertical">9:16 Reels / Shorts</option><option value="square">1:1 Square</option></select><button id="resetBtn">Reset</button></div></div>
+      <div class="canvaswrap"><div class="previewframe" id="previewframe"><div class="placeholder" id="placeholder"><div class="magic">✧</div><h3>Your magic starts here</h3><p>Upload a video to see your live preview and start editing.</p></div><video id="video" playsinline hidden></video><div class="overlaytext" id="overlaytext" hidden></div></div></div>
+      <div class="playbar"><button class="playbtn" id="playBtn" aria-label="Play video" disabled>▶</button><span class="time" id="time">00:00 / 00:00</span><input class="seek" id="seek" type="range" min="0" max="100" value="0" disabled aria-label="Seek video"><button id="muteBtn" disabled>🔊</button></div>
+    </section>
+    <aside class="panel rightpanel">
+      <div class="panelhead">Fine-tune <span class="badge">02</span></div>
+      <div class="section" id="text">
+        <h3>✦ Text overlay</h3>
+        <div class="field"><label for="textInput">Your text</label><input type="text" id="textInput" placeholder="Type something magical…"></div>
+        <div class="field"><label for="textColor">Text color</label><input type="color" id="textColor" value="#ffffff" style="width:100%;height:35px;background:#0b0e20;border:1px solid var(--line);border-radius:8px;padding:3px"></div>
+        <div class="field"><label for="textSize">Text size <span id="textSizeValue">42 px</span></label><input type="range" id="textSize" min="16" max="76" value="42"></div>
+        <div class="field"><label for="textPos">Vertical position</label><input type="range" id="textPos" min="10" max="90" value="50"></div>
+      </div>
+      <div class="section" id="filters">
+        <h3>✧ Magic filters</h3>
+        <div class="field"><label for="filter">Choose a look</label><select id="filter"><option value="none">Original</option><option value="vivid">Vivid pop</option><option value="cinema">Cinematic</option><option value="mono">Black & white</option><option value="warm">Golden hour</option><option value="dream">Dream glow</option></select></div>
+        <div class="field"><label for="brightness">Brightness <span id="brightnessValue">100%</span></label><input type="range" id="brightness" min="50" max="150" value="100"></div>
+        <div class="field"><label for="contrast">Contrast <span id="contrastValue">100%</span></label><input type="range" id="contrast" min="50" max="160" value="100"></div>
+      </div>
+      <div class="section" id="trim">
+        <h3>◷ Trim & timing</h3>
+        <div class="trimrow">
+          <div class="field"><label for="trimStart">Start (sec)</label><input type="number" id="trimStart" value="0" min="0" step="0.1" style="width:100%"></div>
+          <div class="field"><label for="trimEnd">End (sec)</label><input type="number" id="trimEnd" value="0" min="0" step="0.1" style="width:100%"></div>
+        </div>
+        <p class="hint">Set the start and end points, then export the trimmed section.</p>
+      </div>
+      <div class="section" id="export">
+        <h3>⇩ Export your magic</h3>
+        <div class="field"><label for="quality">Export quality</label><select id="quality"><option value="720">HD 720p</option><option value="1080" selected>Full HD 1080p</option></select></div>
+        <button class="primary full" id="exportBtn" disabled>✦ Export video</button>
+        <div class="exportstatus" id="exportstatus"></div>
+        <p class="hint">MP4 conversion is attempted in-browser; first use needs internet to load the conversion engine. If unavailable, WebM is downloaded.</p>
+      </div>
+    </aside>
+  </section>
+  <section class="panel timeline">
+    <div class="timelinehead"><span>▤ Timeline</span><span class="badge" id="durationBadge">Waiting for media</span></div>
+    <div class="timelinebody"><div class="tracklabel"><span>VIDEO TRACK</span><span id="trackDuration">00:00</span></div><div class="track"><div class="trackfill" id="trackfill" style="width:0"></div><div class="playhead" id="playhead"></div></div><div class="tracklabel" style="margin-top:12px"><span>TEXT OVERLAY</span><span id="textTrack">No text added</span></div><div class="track" style="height:22px"><div id="textTrackFill" style="height:100%;width:0;background:linear-gradient(90deg,#8a5cff,#ef5bff);border-radius:6px"></div></div></div>
+  </section>
+  <div class="footer">Smart4Edit · Edit smart. Create more. <br>Prototype version — video editing runs locally in your browser. MP4 conversion loads an open-source engine when needed.</div>
+</main>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+const video=$('video'), frame=$('previewframe'), overlay=$('overlaytext');
+let objectUrl=null, duration=0, toastTimer=null, exporting=false, audioContext=null, sourceNode=null, audioDest=null;
+function toast(msg){const t=$('toast');t.textContent=msg;t.style.display='block';clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.display='none',2800)}
+function fmt(s){if(!Number.isFinite(s)||s<0)s=0;const m=Math.floor(s/60),sec=Math.floor(s%60);return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')}
+function getTrim(){let a=Math.max(0,Number($('trimStart').value)||0),b=Number($('trimEnd').value)||duration;if(b<=0||b>duration)b=duration;a=Math.min(a,Math.max(0,duration-.1));b=Math.max(a+.1,Math.min(b,duration));return {a,b}}
+function filterString(){let f=$('filter').value,b=Number($('brightness').value),c=Number($('contrast').value);let x=`brightness(${b}%) contrast(${c}%)`;if(f==='vivid')x+=' saturate(1.65)';if(f==='cinema')x+=' saturate(.78) contrast(1.2) sepia(.12)';if(f==='mono')x+=' grayscale(1)';if(f==='warm')x+=' sepia(.28) saturate(1.25)';if(f==='dream')x+=' saturate(1.25) brightness(1.08)';return x}
+function applyPreview(){video.style.filter=filterString();overlay.textContent=$('textInput').value;overlay.hidden=!overlay.textContent.trim();overlay.style.color=$('textColor').value;overlay.style.fontSize=$('textSize').value+'px';overlay.style.top=$('textPos').value+'%';overlay.style.bottom='auto';overlay.style.transform='translateY(-50%)';$('textSizeValue').textContent=$('textSize').value+' px';$('brightnessValue').textContent=$('brightness').value+'%';$('contrastValue').textContent=$('contrast').value+'%';$('textTrack').textContent=overlay.hidden?'No text added':'Text: '+overlay.textContent.slice(0,24);$('textTrackFill').style.width=overlay.hidden?'0':'100%'}
+function updateTime(){if(!duration)return;$('time').textContent=fmt(video.currentTime)+' / '+fmt(duration);$('seek').value=duration?video.currentTime/duration*100:0;$('playhead').style.left=(duration?video.currentTime/duration*100:0)+'%';if(!video.paused){const {b}=getTrim();if(video.currentTime>=b){video.pause();$('playBtn').textContent='▶'}}}
+$('uploadBtn').onclick=()=>$('videoFile').click();
+$('videoFile').onchange=e=>{const file=e.target.files[0];if(!file)return;if(!file.type.startsWith('video/')){toast('Please choose a video file.');return}if(objectUrl)URL.revokeObjectURL(objectUrl);objectUrl=URL.createObjectURL(file);video.src=objectUrl;video.hidden=false;$('placeholder').hidden=true;$('filemeta').textContent=file.name+' · '+(file.size/1048576).toFixed(1)+' MB';$('exportstatus').textContent='';video.load()};
+video.onloadedmetadata=()=>{duration=video.duration||0;$('trimStart').value=0;$('trimEnd').value=duration.toFixed(1);$('trimEnd').max=duration;$('trimStart').max=duration;$('seek').disabled=false;$('playBtn').disabled=false;$('muteBtn').disabled=false;$('exportBtn').disabled=false;$('durationBadge').textContent=fmt(duration)+' total';$('trackDuration').textContent=fmt(duration);$('trackfill').style.width='100%';$('time').textContent=fmt(0)+' / '+fmt(duration);updateTime();toast('Video ready — let the magic begin!')};
+video.onerror=()=>toast('This video format could not be opened by your browser. Try an MP4 video.');
+$('playBtn').onclick=async()=>{if(!video.src)return;const {a,b}=getTrim();if(video.currentTime<a||video.currentTime>=b)video.currentTime=a;if(video.paused){try{await video.play();$('playBtn').textContent='Ⅱ'}catch(e){toast('Could not play this video.')}}else{video.pause();$('playBtn').textContent='▶'}};
+video.ontimeupdate=updateTime;video.onpause=()=>{$('playBtn').textContent='▶'};video.onplay=()=>{$('playBtn').textContent='Ⅱ'};
+$('seek').oninput=()=>{if(duration)video.currentTime=Number($('seek').value)/100*duration};
+$('muteBtn').onclick=()=>{video.muted=!video.muted;$('muteBtn').textContent=video.muted?'🔇':'🔊'};
+$('ratio').onchange=()=>{frame.classList.remove('vertical','square');if($('ratio').value==='vertical')frame.classList.add('vertical');if($('ratio').value==='square')frame.classList.add('square')};
+['textInput','textColor','textSize','textPos','filter','brightness','contrast'].forEach(id=>$(id).addEventListener('input',applyPreview));
+$('trimStart').onchange=()=>{let a=Math.max(0,Math.min(duration,Number($('trimStart').value)||0));$('trimStart').value=a;if(video.currentTime<a)video.currentTime=a};
+$('trimEnd').onchange=()=>{let b=Math.max(.1,Math.min(duration,Number($('trimEnd').value)||duration));$('trimEnd').value=b;if(video.currentTime>b)video.currentTime=b};
+document.querySelectorAll('[data-focus]').forEach(btn=>btn.onclick=()=>{const el=$(btn.dataset.focus);el.scrollIntoView({behavior:'smooth',block:'nearest'});el.style.boxShadow='inset 0 0 0 1px #6f67ff';setTimeout(()=>el.style.boxShadow='',900)});
+$('resetBtn').onclick=()=>{if(!video.src){toast('Upload a video first.');return}$('textInput').value='';$('filter').value='none';$('brightness').value=100;$('contrast').value=100;$('textSize').value=42;$('textPos').value=50;$('ratio').value='wide';frame.classList.remove('vertical','square');$('trimStart').value=0;$('trimEnd').value=duration.toFixed(1);applyPreview();video.currentTime=0;toast('Edits reset.')};
+function canvasFilter(){return filterString()}
+$('exportBtn').onclick=async()=>{
+ if(!video.src||exporting)return;
+ if(!window.MediaRecorder||!HTMLCanvasElement.prototype.captureStream){toast('Your browser does not support browser-based export. Try current Chrome or Edge.');return}
+ const {a,b}=getTrim();if(b<=a){toast('Choose a valid trim range.');return}
+ exporting=true;$('exportBtn').disabled=true;$('exportstatus').textContent='Preparing export… keep this tab open.';
+ const wasMuted=video.muted,wasPaused=video.paused,oldTime=video.currentTime;
+ try{
+  const quality=Number($('quality').value),ratio=$('ratio').value;
+  let w=quality,h=Math.round(w*9/16);if(ratio==='vertical'){h=quality;w=Math.round(h*9/16)}else if(ratio==='square'){w=quality;h=quality}
+  const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
+  const stream=canvas.captureStream(30);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
+  let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:quality>=1080?6500000:3500000})}catch(e){recorder=new MediaRecorder(stream)}
+  const chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const done=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(new Error('Export recording failed'))});
+  // Route original audio into the exported stream when browser audio APIs permit it.
+  let exportStream=stream;
+  try{audioContext=new (window.AudioContext||window.webkitAudioContext)();sourceNode=audioContext.createMediaElementSource(video);audioDest=audioContext.createMediaStreamDestination();sourceNode.connect(audioDest);sourceNode.connect(audioContext.destination);exportStream=new MediaStream([...stream.getVideoTracks(),...audioDest.stream.getAudioTracks()]);}catch(e){exportStream=stream}
+  try{recorder.stop()}catch(e){}
+  recorder=new MediaRecorder(exportStream,{mimeType,videoBitsPerSecond:quality>=1080?6500000:3500000});recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
+  const exportDone=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(new Error('Export recording failed'))});
+  video.pause();video.muted=false;video.currentTime=a;await new Promise(resolve=>{if(Math.abs(video.currentTime-a)<.04&&video.readyState>=2)resolve();else video.addEventListener('seeked',resolve,{once:true})});
+  if(audioContext&&audioContext.state==='suspended')await audioContext.resume();
+  const draw=()=>{ctx.save();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);ctx.filter=canvasFilter();const vw=video.videoWidth||w,vh=video.videoHeight||h;const scale=Math.min(w/vw,h/vh);const dw=vw*scale,dh=vh*scale;ctx.drawImage(video,(w-dw)/2,(h-dh)/2,dw,dh);ctx.filter='none';const txt=$('textInput').value.trim();if(txt){const size=Number($('textSize').value)*(w/Math.max(320,frame.clientWidth));ctx.font=`900 ${Math.max(16,size)}px system-ui, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=$('textColor').value;ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=Math.max(5,size*.22);ctx.shadowOffsetY=2;const maxWidth=w*.84;let lines=[],line='';for(const word of txt.split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const lineHeight=Math.max(22,size*1.15);let y=h*Number($('textPos').value)/100-(lines.length-1)*lineHeight/2;lines.forEach((ln,i)=>ctx.fillText(ln,w/2,y+i*lineHeight,maxWidth))}ctx.restore()};
+  draw();recorder.start(250);await video.play();
+  const tick=()=>{if(!exporting)return;draw();const elapsed=Math.max(0,video.currentTime-a);$('exportstatus').textContent='Exporting… '+Math.min(100,Math.round(elapsed/(b-a)*100))+'%';if(video.currentTime>=b||video.ended){video.pause();draw();if(recorder.state!=='inactive')recorder.stop();return}requestAnimationFrame(tick)};
+  requestAnimationFrame(tick);
+  await exportDone;
+  const webmBlob=new Blob(chunks,{type:mime});if(!webmBlob.size)throw new Error('No video data was created.');
+  let finalBlob=webmBlob, extension='webm';
+  $('exportstatus').textContent='Converting to MP4… first conversion may download the video engine.';
+  try {
+    const { FFmpeg } = await import('https://esm.sh/@ffmpeg/ffmpeg@0.12.10');
+    const { toBlobURL } = await import('https://esm.sh/@ffmpeg/util@0.12.1');
+    if(!window.smart4EditFFmpeg){
+      const ffmpeg=new FFmpeg();
+      ffmpeg.on('progress',({progress})=>{$('exportstatus').textContent='Converting to MP4… '+Math.round((progress||0)*100)+'%';});
+      const base='https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
+      await ffmpeg.load({coreURL:await toBlobURL(base+'/ffmpeg-core.js','text/javascript'),wasmURL:await toBlobURL(base+'/ffmpeg-core.wasm','application/wasm')});
+      window.smart4EditFFmpeg=ffmpeg;
+    }
+    const ffmpeg=window.smart4EditFFmpeg;
+    await ffmpeg.writeFile('smart4edit-input.webm',new Uint8Array(await webmBlob.arrayBuffer()));
+    await ffmpeg.exec(['-i','smart4edit-input.webm','-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p','-movflags','+faststart','-c:a','aac','-b:a','128k','smart4edit-output.mp4']);
+    const output=await ffmpeg.readFile('smart4edit-output.mp4');
+    finalBlob=new Blob([output.buffer],{type:'video/mp4'});extension='mp4';
+    await ffmpeg.deleteFile('smart4edit-input.webm');await ffmpeg.deleteFile('smart4edit-output.mp4');
+  } catch(convertError) {
+    console.warn('MP4 conversion unavailable; delivering WebM instead.',convertError);
+    extension='webm';finalBlob=webmBlob;
+    $('exportstatus').textContent='MP4 conversion was unavailable. Downloading compatible WebM instead.';
+  }
+  const url=URL.createObjectURL(finalBlob),link=document.createElement('a');link.href=url;link.download='Smart4Edit-creation.'+extension;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  if(extension==='mp4')$('exportstatus').textContent='MP4 export complete! Your download should be ready.';
+  toast(extension==='mp4'?'Your MP4 video is exported!':'Your video is exported as WebM.');stream.getTracks().forEach(t=>t.stop());if(audioDest)audioDest.stream.getTracks().forEach(t=>t.stop());
+ }catch(err){console.error(err);$('exportstatus').textContent='Export could not finish. Try a shorter clip or a current Chrome/Edge browser.';toast('Export failed — try a shorter video.')}
+ finally{exporting=false;$('exportBtn').disabled=!video.src;if(audioContext){try{await audioContext.close()}catch(e){}audioContext=null;sourceNode=null;audioDest=null}video.muted=wasMuted;video.pause();if(Number.isFinite(oldTime))video.currentTime=Math.min(oldTime,duration||oldTime);$('playBtn').textContent='▶'}
+};
+applyPreview();
+</script>
+</body>
+</html>
