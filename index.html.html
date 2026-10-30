@@ -31,6 +31,8 @@ main{max-width:1500px;margin:auto;padding:24px 3vw 40px}.hero{display:flex;align
 .tvgrid{display:grid;grid-template-columns:1.1fr .9fr;gap:14px}.tvgrid textarea{width:100%;min-height:125px;resize:vertical;background:#090d1e;color:#fff;border:1px solid #343c70;border-radius:10px;padding:12px;font:inherit}
 .tvcontrols{display:grid;gap:10px;align-content:start}.tvcontrols label{font-size:12px;color:var(--muted);display:grid;gap:5px}.tvcontrols select,.tvcontrols input{width:100%;background:#090d1e;color:#fff;border:1px solid #343c70;border-radius:8px;padding:9px}
 .tvpreview{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:14px;align-items:center;margin-top:14px}
+.tvassets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:14px}.tvasset{background:#090d1e;border:1px solid #343c70;border-radius:10px;padding:12px}.tvasset label{display:block;color:#cbd2f5;font-size:12px;margin-bottom:7px}.tvasset input{width:100%;font-size:11px;color:var(--muted)}.tvasset small{display:block;color:var(--muted);font-size:10px;margin-top:7px}.tvasset button{margin-top:8px;width:100%}
+@media(max-width:700px){.tvassets{grid-template-columns:1fr}}
 #tvCanvas{width:100%;aspect-ratio:16/9;background:#080b18;border-radius:10px;border:1px solid #343c70;display:block}
 .tvstatus{font-size:12px;color:var(--cyan);min-height:18px;margin-top:8px}
 @media(max-width:700px){.tvgrid,.tvpreview{grid-template-columns:1fr}}
@@ -79,7 +81,8 @@ main{max-width:1500px;margin:auto;padding:24px 3vw 40px}.hero{display:flex;align
         <div class="field"><label for="filter">Choose a look</label><select id="filter"><option value="none">Original</option><option value="vivid">Vivid pop</option><option value="cinema">Cinematic</option><option value="mono">Black & white</option><option value="warm">Golden hour</option><option value="dream">Dream glow</option></select></div>
         <div class="field"><label for="brightness">Brightness <span id="brightnessValue">100%</span></label><input type="range" id="brightness" min="50" max="150" value="100"></div>
         <div class="field"><label for="contrast">Contrast <span id="contrastValue">100%</span></label><input type="range" id="contrast" min="50" max="160" value="100"></div>
-      </div>      <div class="section" id="trim">
+      </div>
+      <div class="section" id="trim">
         <h3>◷ Trim & timing</h3>
         <div class="trimrow">
           <div class="field"><label for="trimStart">Start (sec)</label><input type="number" id="trimStart" value="0" min="0" step="0.1" style="width:100%"></div>
@@ -112,6 +115,16 @@ main{max-width:1500px;margin:auto;padding:24px 3vw 40px}.hero{display:flex;align
         <label>Format<select id="tvRatio"><option value="landscape">16:9 YouTube</option><option value="portrait">9:16 Reels / Shorts</option><option value="square">1:1 Square</option></select></label>
         <button class="primary full" id="makeTextVideo">✦ Generate video</button>
       </div>
+    </div>
+    <div class="tvassets">
+      <div class="tvasset"><label for="tvImages">📷 Add real photos (one per scene)</label><input id="tvImages" type="file" accept="image/*" multiple><small id="tvImageInfo">Optional: JPG, PNG or WEBP images.</small></div>
+      <div class="tvasset"><label for="tvMusic">🎵 Background music</label><input id="tvMusic" type="file" accept="audio/*"><small id="tvMusicInfo">Optional: MP3, WAV or other browser-supported audio.</small></div>
+      <div class="tvasset"><label for="tvVoice">🎙️ Voice-over audio</label><input id="tvVoice" type="file" accept="audio/*"><small id="tvVoiceInfo">Upload your recorded narration. It will be mixed into the video.</small></div>
+    </div>
+    <div class="tvassets">
+      <div class="tvasset"><label>🔊 Browser voice preview</label><button type="button" id="tvSpeak">▶ Read my story aloud</button><small>Uses your browser's available voice. Preview only; upload a voice recording above to include narration in the exported video.</small></div>
+      <div class="tvasset"><label>🎚️ Music volume</label><input id="tvMusicVolume" type="range" min="0" max="100" value="25"><small>Set background music level.</small></div>
+      <div class="tvasset"><label>🎚️ Voice volume</label><input id="tvVoiceVolume" type="range" min="0" max="100" value="100"><small>Set narration level.</small></div>
     </div>
     <div class="tvpreview">
       <canvas id="tvCanvas" width="1280" height="720" aria-label="Text to video preview"></canvas>
@@ -162,7 +175,7 @@ $('exportBtn').onclick=async()=>{
   let w=quality,h=Math.round(w*9/16);if(ratio==='vertical'){h=quality;w=Math.round(h*9/16)}else if(ratio==='square'){w=quality;h=quality}
   const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;const ctx=canvas.getContext('2d');
   const stream=canvas.captureStream(30);let mime='video/webm;codecs=vp9';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm;codecs=vp8';if(!MediaRecorder.isTypeSupported(mime))mime='video/webm';
-  let recorder;try{recorder=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:quality>=1080?6500000:3500000})}catch(e){recorder=new MediaRecorder(stream)}
+  let recorder;try{recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:quality>=1080?6500000:3500000})}catch(e){recorder=new MediaRecorder(stream)}
   const chunks=[];recorder.ondataavailable=e=>{if(e.data&&e.data.size)chunks.push(e.data)};
   const done=new Promise((resolve,reject)=>{recorder.onstop=resolve;recorder.onerror=()=>reject(new Error('Export recording failed'))});
   // Route original audio into the exported stream when browser audio APIs permit it.
@@ -176,7 +189,8 @@ $('exportBtn').onclick=async()=>{
   const draw=()=>{ctx.save();ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);ctx.filter=canvasFilter();const vw=video.videoWidth||w,vh=video.videoHeight||h;const scale=Math.min(w/vw,h/vh);const dw=vw*scale,dh=vh*scale;ctx.drawImage(video,(w-dw)/2,(h-dh)/2,dw,dh);ctx.filter='none';const txt=$('textInput').value.trim();if(txt){const size=Number($('textSize').value)*(w/Math.max(320,frame.clientWidth));ctx.font=`900 ${Math.max(16,size)}px system-ui, sans-serif`;ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=$('textColor').value;ctx.shadowColor='rgba(0,0,0,.9)';ctx.shadowBlur=Math.max(5,size*.22);ctx.shadowOffsetY=2;const maxWidth=w*.84;let lines=[],line='';for(const word of txt.split(/\s+/)){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);const lineHeight=Math.max(22,size*1.15);let y=h*Number($('textPos').value)/100-(lines.length-1)*lineHeight/2;lines.forEach((ln,i)=>ctx.fillText(ln,w/2,y+i*lineHeight,maxWidth))}ctx.restore()};
   draw();recorder.start(250);await video.play();
   const tick=()=>{if(!exporting)return;draw();const elapsed=Math.max(0,video.currentTime-a);$('exportstatus').textContent='Exporting… '+Math.min(100,Math.round(elapsed/(b-a)*100))+'%';if(video.currentTime>=b||video.ended){video.pause();draw();if(recorder.state!=='inactive')recorder.stop();return}requestAnimationFrame(tick)};
-  requestAnimationFrame(tick);  await exportDone;
+  requestAnimationFrame(tick);
+  await exportDone;
   const webmBlob=new Blob(chunks,{type:mime});if(!webmBlob.size)throw new Error('No video data was created.');
   let finalBlob=webmBlob, extension='webm';
   $('exportstatus').textContent='Converting to MP4… first conversion may download the video engine.';
@@ -209,58 +223,48 @@ $('exportBtn').onclick=async()=>{
 };
 applyPreview();
 
-// Text-to-video: creates animated typographic scenes locally in the browser.
+// Text-to-video studio: local images, uploaded audio tracks and browser voice preview.
 (()=>{
  const canvas=$('tvCanvas'),ctx=canvas.getContext('2d');
- let renderedBlob=null, renderUrl=null;
+ let renderedBlob=null,renderUrl=null,imageUrls=[],images=[],musicUrl=null,voiceUrl=null;
  const palettes={cinematic:['#07152e','#164e63','#a855f7'],minimal:['#111827','#334155','#64748b'],bold:['#4c0519','#be123c','#f97316']};
- function wrapText(text,maxWidth,font){
-   ctx.font=font;const words=text.split(/\s+/);const lines=[];let line='';
-   for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}
-   if(line)lines.push(line);return lines;
- }
+ const music=new Audio(),voice=new Audio();music.loop=true;voice.loop=false;
+ function wrapText(text,maxWidth,font){ctx.font=font;const words=text.split(/\s+/),lines=[];let line='';for(const word of words){const test=line?line+' '+word:word;if(ctx.measureText(test).width>maxWidth&&line){lines.push(line);line=word}else line=test}if(line)lines.push(line);return lines}
  function drawScene(text,index,total,style,progress){
-   const [a,b,c]=palettes[style];const w=canvas.width,h=canvas.height;
-   const g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,a);g.addColorStop(.55,b);g.addColorStop(1,c);
-   ctx.fillStyle=g;ctx.fillRect(0,0,w,h);
-   const drift=progress*w*.08;
-   ctx.globalAlpha=.17;for(let i=0;i<7;i++){ctx.beginPath();ctx.arc((i*223+drift)%(w+250)-100,h*.5+Math.sin(progress*6+i)*h*.25,90+i*24,0,Math.PI*2);ctx.fillStyle=i%2?'#fff':'#8be9ff';ctx.fill()}ctx.globalAlpha=1;
-   ctx.fillStyle='rgba(255,255,255,.72)';ctx.font='700 22px Arial';ctx.fillText('SMART4EDIT  •  STORY VIDEO',64,68);
-   ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(64,h-64,w-128,5);ctx.fillStyle='#fff';ctx.fillRect(64,h-64,(w-128)*(index+1)/total,5);
-   const fontSize=Math.min(w*.065,82),font=`800 ${fontSize}px Arial`;const lines=wrapText(text,w*.78,font);
-   ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';
-   const lineH=fontSize*1.25,startY=h/2-(lines.length-1)*lineH/2+Math.sin(progress*Math.PI)*12;
-   lines.forEach((line,i)=>{ctx.shadowColor='rgba(0,0,0,.45)';ctx.shadowBlur=18;ctx.fillStyle='#fff';ctx.fillText(line,w/2,startY+i*lineH,w*.82)});
-   ctx.shadowBlur=0;ctx.textAlign='left';ctx.font='600 20px Arial';ctx.fillStyle='rgba(255,255,255,.75)';ctx.fillText(`SCENE ${String(index+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`,64,h-88);
+  const w=canvas.width,h=canvas.height,img=images[index]||images[0];
+  if(img){const scale=Math.max(w/img.width,h/img.height),dw=img.width*scale,dh=img.height*scale,zoom=1+progress*.06;ctx.save();ctx.translate(w/2,h/2);ctx.scale(zoom,zoom);ctx.drawImage(img,-dw/2,-dh/2,dw,dh);ctx.restore();ctx.fillStyle='rgba(0,0,0,.42)';ctx.fillRect(0,0,w,h)}
+  else{const [a,b,c]=palettes[style],g=ctx.createLinearGradient(0,0,w,h);g.addColorStop(0,a);g.addColorStop(.55,b);g.addColorStop(1,c);ctx.fillStyle=g;ctx.fillRect(0,0,w,h);const drift=progress*w*.08;ctx.globalAlpha=.17;for(let i=0;i<7;i++){ctx.beginPath();ctx.arc((i*223+drift)%(w+250)-100,h*.5+Math.sin(progress*6+i)*h*.25,90+i*24,0,Math.PI*2);ctx.fillStyle=i%2?'#fff':'#8be9ff';ctx.fill()}ctx.globalAlpha=1}
+  ctx.fillStyle='rgba(255,255,255,.82)';ctx.font=`700 ${Math.max(16,w*.018)}px Arial`;ctx.textAlign='left';ctx.fillText('SMART4EDIT  •  STORY VIDEO',w*.05,h*.095);
+  ctx.fillStyle='rgba(255,255,255,.35)';ctx.fillRect(w*.05,h*.91,w*.9,5);ctx.fillStyle='#fff';ctx.fillRect(w*.05,h*.91,w*.9*(index+1)/total,5);
+  const fontSize=Math.min(w*.065,82),font=`800 ${fontSize}px Arial`,lines=wrapText(text,w*.78,font);ctx.font=font;ctx.textAlign='center';ctx.textBaseline='middle';const lineH=fontSize*1.25,startY=h/2-(lines.length-1)*lineH/2+Math.sin(progress*Math.PI)*12;
+  lines.forEach((line,i)=>{ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=18;ctx.fillStyle='#fff';ctx.fillText(line,w/2,startY+i*lineH,w*.82)});ctx.shadowBlur=0;ctx.textAlign='left';ctx.font=`600 ${Math.max(14,w*.016)}px Arial`;ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText(`SCENE ${String(index+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`,w*.05,h*.875);
  }
+ $('tvImages').addEventListener('change',e=>{imageUrls.forEach(URL.revokeObjectURL);imageUrls=[];images=[];const files=[...e.target.files].slice(0,20);files.forEach(file=>{const url=URL.createObjectURL(file),img=new Image();imageUrls.push(url);img.src=url;images.push(img)});$('tvImageInfo').textContent=files.length?`${files.length} photo(s) selected. They will be used in scene order.`:'Optional: JPG, PNG or WEBP images.';});
+ $('tvMusic').addEventListener('change',e=>{if(musicUrl)URL.revokeObjectURL(musicUrl);const f=e.target.files[0];if(!f)return;musicUrl=URL.createObjectURL(f);music.src=musicUrl;$('tvMusicInfo').textContent=f.name;});
+ $('tvVoice').addEventListener('change',e=>{if(voiceUrl)URL.revokeObjectURL(voiceUrl);const f=e.target.files[0];if(!f)return;voiceUrl=URL.createObjectURL(f);voice.src=voiceUrl;$('tvVoiceInfo').textContent=f.name;});
+ $('tvMusicVolume').addEventListener('input',()=>music.volume=Number($('tvMusicVolume').value)/100);$('tvVoiceVolume').addEventListener('input',()=>voice.volume=Number($('tvVoiceVolume').value)/100);
+ $('tvSpeak').addEventListener('click',()=>{const text=$('tvText').value.trim();if(!text){$('tvStatus').textContent='Write your story first.';return}if(!('speechSynthesis'in window)){ $('tvStatus').textContent='Browser speech is not available. Upload a voice recording instead.';return}speechSynthesis.cancel();speechSynthesis.speak(new SpeechSynthesisUtterance(text));$('tvStatus').textContent='Playing browser voice preview. Upload a narration file to include it in your export.';});
  $('tvRatio').addEventListener('change',()=>{const v=$('tvRatio').value;canvas.width=v==='portrait'?720:v==='square'?900:1280;canvas.height=v==='portrait'?1280:v==='square'?900:720;drawScene('Your story starts here',0,1,$('tvStyle').value,0)});
- $('tvStyle').addEventListener('change',()=>drawScene('Your story starts here',0,1,$('tvStyle').value,0));
- drawScene('Your story starts here',0,1,'cinematic',0);
+ $('tvStyle').addEventListener('change',()=>drawScene('Your story starts here',0,1,$('tvStyle').value,0));drawScene('Your story starts here',0,1,'cinematic',0);
  $('makeTextVideo').addEventListener('click',async()=>{
-   const raw=$('tvText').value.trim();if(!raw){$('tvStatus').textContent='Please write your story first.';return}
-   if(!canvas.captureStream||!window.MediaRecorder){$('tvStatus').textContent='Video export is not supported in this browser. Please use updated Chrome or Edge.';return}
-   const scenes=raw.split(/(?<=[.!?۔])\s+|\n+/).map(x=>x.trim()).filter(Boolean).slice(0,20);
-   if(!scenes.length)return;
-   const seconds=Number($('tvDuration').value),style=$('tvStyle').value,stream=canvas.captureStream(30);
-   const mime=['video/webm;codecs=vp9','video/webm;codecs=vp8','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));
-   if(!mime){$('tvStatus').textContent='WebM recording is unavailable in this browser.';return}
-   const recorder=new MediaRecorder(stream,{mimeType:mime,videoBitsPerSecond:5000000}),chunks=[];
-   recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
-   recorder.onstop=()=>{renderedBlob=new Blob(chunks,{type:mime});if(renderUrl)URL.revokeObjectURL(renderUrl);renderUrl=URL.createObjectURL(renderedBlob);$('downloadTextVideo').disabled=false;$('tvStatus').textContent='Your video is ready! Click Download video.';stream.getTracks().forEach(t=>t.stop())};
-   $('makeTextVideo').disabled=true;$('downloadTextVideo').disabled=true;$('tvStatus').textContent='Generating scenes…';
-   recorder.start();
-   const frameMs=1000/30,totalFrames=seconds*30;
-   for(let i=0;i<scenes.length;i++){
-     for(let f=0;f<totalFrames;f++){
-       drawScene(scenes[i],i,scenes.length,style,f/totalFrames);
-       if(f%15===0){$('tvStatus').textContent=`Rendering scene ${i+1} of ${scenes.length}…`;await new Promise(r=>setTimeout(r,frameMs*15))}
-     }
-   }
-   recorder.stop();$('makeTextVideo').disabled=false;
+  const raw=$('tvText').value.trim();if(!raw){$('tvStatus').textContent='Please write your story first.';return}if(!canvas.captureStream||!window.MediaRecorder){$('tvStatus').textContent='Video export needs current Chrome or Edge.';return}
+  const scenes=raw.split(/(?<=[.!?۔])\s+|\n+/).map(x=>x.trim()).filter(Boolean).slice(0,20);if(!scenes.length)return;
+  if(images.some(img=>!img.complete)){ $('tvStatus').textContent='Please wait for photos to load, then generate again.';return}
+  const seconds=Number($('tvDuration').value),style=$('tvStyle').value,videoStream=canvas.captureStream(30),audioTracks=[];let audioCtx=null,musicSource=null,voiceSource=null,musicGain=null,voiceGain=null;
+  try{if(music.src||voice.src){audioCtx=new(window.AudioContext||window.webkitAudioContext)();const dest=audioCtx.createMediaStreamDestination();if(music.src){musicSource=audioCtx.createMediaElementSource(music);musicGain=audioCtx.createGain();musicGain.gain.value=Number($('tvMusicVolume').value)/100;musicSource.connect(musicGain).connect(dest)}if(voice.src){voiceSource=audioCtx.createMediaElementSource(voice);voiceGain=audioCtx.createGain();voiceGain.gain.value=Number($('tvVoiceVolume').value)/100;voiceSource.connect(voiceGain).connect(dest)}audioTracks.push(...dest.stream.getAudioTracks())}}
+  catch(err){console.warn('Audio mixing unavailable',err)}
+  const combined=new MediaStream([...videoStream.getVideoTracks(),...audioTracks]);const mime=['video/webm;codecs=vp9,opus','video/webm;codecs=vp8,opus','video/webm'].find(t=>MediaRecorder.isTypeSupported(t));if(!mime){$('tvStatus').textContent='WebM recording is unavailable in this browser.';combined.getTracks().forEach(t=>t.stop());return}
+  const recorder=new MediaRecorder(combined,{mimeType:mime,videoBitsPerSecond:5000000}),chunks=[];recorder.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
+  recorder.onstop=async()=>{renderedBlob=new Blob(chunks,{type:mime});if(renderUrl)URL.revokeObjectURL(renderUrl);renderUrl=URL.createObjectURL(renderedBlob);$('downloadTextVideo').disabled=false;$('tvStatus').textContent='Your video with selected photos and audio is ready! Click Download video.';combined.getTracks().forEach(t=>t.stop());music.pause();voice.pause();if(audioCtx)await audioCtx.close().catch(()=>{});};
+  $('makeTextVideo').disabled=true;$('downloadTextVideo').disabled=true;$('tvStatus').textContent='Preparing video and audio…';
+  try{if(audioCtx&&audioCtx.state==='suspended')await audioCtx.resume();if(music.src){music.currentTime=0;music.volume=1;await music.play().catch(()=>{})}if(voice.src){voice.currentTime=0;voice.volume=1;await voice.play().catch(()=>{})}recorder.start(250);const frameMs=1000/30,totalFrames=seconds*30;
+   for(let i=0;i<scenes.length;i++){for(let f=0;f<totalFrames;f++){drawScene(scenes[i],i,scenes.length,style,f/totalFrames);if(f%15===0){$('tvStatus').textContent=`Rendering scene ${i+1} of ${scenes.length}…`;await new Promise(r=>setTimeout(r,frameMs*15))}}}
+   recorder.stop();
+  }catch(err){console.error(err);if(recorder.state!=='inactive')recorder.stop();$('tvStatus').textContent='Could not render this video. Try shorter story or smaller media files.';}
+  finally{$('makeTextVideo').disabled=false;}
  });
- $('downloadTextVideo').addEventListener('click',()=>{if(!renderedBlob)return;const a=document.createElement('a');a.href=renderUrl;a.download='Smart4Edit-Text-Video.webm';document.body.appendChild(a);a.click();a.remove()});
+ $('downloadTextVideo').addEventListener('click',()=>{if(!renderedBlob)return;const a=document.createElement('a');a.href=renderUrl;a.download='Smart4Edit-Story-Video.webm';document.body.appendChild(a);a.click();a.remove()});
 })();
-
 </script>
 </body>
 </html>
