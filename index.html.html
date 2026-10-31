@@ -242,34 +242,44 @@ applyPreview();
   lines.forEach((line,i)=>{ctx.shadowColor='rgba(0,0,0,.7)';ctx.shadowBlur=18;ctx.fillStyle='#fff';ctx.fillText(line,w/2,startY+i*lineH,w*.82)});ctx.shadowBlur=0;ctx.textAlign='left';ctx.font=`600 ${Math.max(14,w*.016)}px Arial`;ctx.fillStyle='rgba(255,255,255,.85)';ctx.fillText(`SCENE ${String(index+1).padStart(2,'0')} / ${String(total).padStart(2,'0')}`,w*.05,h*.875);
  }
  $('tvImages').addEventListener('change',e=>{imageUrls.forEach(URL.revokeObjectURL);imageUrls=[];images=[];const files=[...e.target.files].slice(0,20);files.forEach(file=>{const url=URL.createObjectURL(file),img=new Image();imageUrls.push(url);img.src=url;images.push(img)});$('tvImageInfo').textContent=files.length?`${files.length} photo(s) selected. They will be used in scene order.`:'Optional: JPG, PNG or WEBP images.';});
- // Free scene visuals from Wikimedia Commons. No API key or paid service required.
+ // Free scene visuals from Wikimedia Commons. Search files first, then fetch image URLs.
  $('tvAutoVisuals').addEventListener('click',async()=>{
   const raw=$('tvText').value.trim();
   if(!raw){$('tvAutoInfo').textContent='Please write your story first.';return;}
   const scenes=raw.split(/(?<=[.!?۔])\s+|\n+/).map(x=>x.trim()).filter(Boolean).slice(0,20);
   if(!scenes.length)return;
-  const button=$('tvAutoVisuals');button.disabled=true;images=[];imageUrls.forEach(URL.revokeObjectURL);imageUrls=[];
-  $('tvAutoInfo').textContent=`Searching free Commons images for ${scenes.length} scene(s)…`;
-  let found=0;
+  const button=$('tvAutoVisuals');button.disabled=true;images=[];imageUrls.forEach(u=>{if(u&&u.startsWith('blob:'))URL.revokeObjectURL(u)});imageUrls=[];
+  $('tvAutoInfo').textContent=`Searching Wikimedia Commons for ${scenes.length} scene(s)…`;
+  let found=0, lastError='';
+  const stop=new Set(['the','and','was','were','with','from','that','this','there','their','they','them','then','one','day','every','morning','soon','after','before','into','onto','over','under','full','small','young','beautiful','completely','together','started','decided','noticed','lived','walked','helped','became','said','his','her','its','for','but','not','who','can','big','more','few','at','in','on','of','to','a','an','is','village','looked']);
+  function makeTerms(sentence){
+   const words=sentence.replace(/[^\p{L}\p{N}\s-]/gu,' ').toLowerCase().split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
+   return words.slice(0,3).join(' ') || words.slice(0,2).join(' ') || 'nature landscape';
+  }
+  async function commonsImage(terms){
+   const searchUrl='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&list=search&srnamespace=6&srlimit=8&srsearch='+encodeURIComponent(terms);
+   const sr=await fetch(searchUrl);if(!sr.ok)throw new Error('Commons search HTTP '+sr.status);
+   const sd=await sr.json();const hits=sd.query?.search||[];if(!hits.length)return null;
+   const ids=hits.map(x=>x.pageid).join('|');
+   const infoUrl='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin=*&pageids='+ids+'&prop=imageinfo&iiprop=url&iiurlwidth=1280';
+   const ir=await fetch(infoUrl);if(!ir.ok)throw new Error('Image details HTTP '+ir.status);
+   const id=await ir.json();const pages=Object.values(id.query?.pages||{});
+   const page=pages.find(x=>x.imageinfo?.[0]?.thumburl)||pages.find(x=>x.imageinfo?.[0]?.url);
+   return page?.imageinfo?.[0]?.thumburl||page?.imageinfo?.[0]?.url||null;
+  }
   for(let i=0;i<scenes.length;i++){
    try{
-    const stop=new Set(['the','and','was','were','with','from','that','this','there','their','they','them','then','one','day','every','morning','soon','after','before','into','onto','over','under','full','small','young','beautiful','completely','together','started','decided','noticed','lived','walked','helped','became','said','his','her','its','for','but','not','who','can','big','more','few','at','in','on','of','to','a','an','is']);
-    const words=scenes[i].replace(/[^\p{L}\p{N}\s-]/gu,' ').toLowerCase().split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
-    const terms=words.slice(0,4).join(' ')||scenes[i].split(/\s+/).slice(0,3).join(' ');
-    const api='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(terms)+'&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url&iiurlwidth=1600&format=json&origin=*';
-    const response=await fetch(api);if(!response.ok)throw new Error('Wikimedia request failed: '+response.status);
-    const data=await response.json();const pages=Object.values(data.query?.pages||{});
-    const candidate=pages.find(page=>page.imageinfo?.[0]?.thumburl)||pages.find(page=>page.imageinfo?.[0]?.url);
-    if(!candidate)throw new Error('No image found');
-    const url=candidate.imageinfo[0].thumburl||candidate.imageinfo[0].url;
+    let url=await commonsImage(makeTerms(scenes[i]));
+    if(!url)url=await commonsImage('nature landscape');
+    if(!url)throw new Error('No matching Commons files returned');
     const img=new Image();img.crossOrigin='anonymous';img.src=url;
-    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject});
+    await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=()=>reject(new Error('Image could not load (possibly blocked by browser/network)'))});
     images[i]=img;imageUrls[i]=url;found++;
-   }catch(err){console.warn('No Commons visual for scene',i+1,err);images[i]=null;}
+   }catch(err){lastError=err.message||String(err);console.warn('Scene visual search failed',i+1,err);images[i]=null;}
    $('tvAutoInfo').textContent=`Found ${found} of ${scenes.length} scene visuals…`;
   }
-  $('tvImageInfo').textContent=`${found} free web image(s) loaded. Any missing scene will use a generated gradient background.`;
-  $('tvAutoInfo').textContent=found?`Done! ${found} scene visual(s) ready. Check image rights/attribution before publishing.`:'No images loaded. Check your internet connection and try again, or upload your own photos.';
+  $('tvImageInfo').textContent=`${found} web image(s) loaded. Missing scenes will use a gradient background.`;
+  $('tvAutoInfo').textContent=found?`Done! ${found} scene visual(s) ready. Check each image's license and attribution before publishing.`:`No images loaded. ${lastError||'Check your internet connection, then try again.'}`;
   drawScene(scenes[0],0,scenes.length,$('tvStyle').value,0);button.disabled=false;
  });
  $('tvMusic').addEventListener('change',e=>{if(musicUrl)URL.revokeObjectURL(musicUrl);const f=e.target.files[0];if(!f)return;musicUrl=URL.createObjectURL(f);music.src=musicUrl;$('tvMusicInfo').textContent=f.name;});
