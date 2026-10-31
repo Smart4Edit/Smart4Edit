@@ -253,9 +253,11 @@ applyPreview();
   let found=0;
   for(let i=0;i<scenes.length;i++){
    try{
-    const terms=scenes[i].replace(/[^\p{L}\p{N}\s-]/gu,' ').trim().split(/\s+/).slice(0,7).join(' ');
-    const api='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(terms+' filetype:bitmap')+'&gsrnamespace=6&gsrlimit=8&prop=imageinfo&iiprop=url&iiurlwidth=1600&format=json&origin=*';
-    const response=await fetch(api);if(!response.ok)throw new Error('Search unavailable');
+    const stop=new Set(['the','and','was','were','with','from','that','this','there','their','they','them','then','one','day','every','morning','soon','after','before','into','onto','over','under','full','small','young','beautiful','completely','together','started','decided','noticed','lived','walked','helped','became','said','his','her','its','for','but','not','who','can','big','more','few','at','in','on','of','to','a','an','is']);
+    const words=scenes[i].replace(/[^\p{L}\p{N}\s-]/gu,' ').toLowerCase().split(/\s+/).filter(w=>w.length>2&&!stop.has(w));
+    const terms=words.slice(0,4).join(' ')||scenes[i].split(/\s+/).slice(0,3).join(' ');
+    const api='https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch='+encodeURIComponent(terms)+'&gsrnamespace=6&gsrlimit=10&prop=imageinfo&iiprop=url&iiurlwidth=1600&format=json&origin=*';
+    const response=await fetch(api);if(!response.ok)throw new Error('Wikimedia request failed: '+response.status);
     const data=await response.json();const pages=Object.values(data.query?.pages||{});
     const candidate=pages.find(page=>page.imageinfo?.[0]?.thumburl)||pages.find(page=>page.imageinfo?.[0]?.url);
     if(!candidate)throw new Error('No image found');
@@ -267,7 +269,7 @@ applyPreview();
    $('tvAutoInfo').textContent=`Found ${found} of ${scenes.length} scene visuals…`;
   }
   $('tvImageInfo').textContent=`${found} free web image(s) loaded. Any missing scene will use a generated gradient background.`;
-  $('tvAutoInfo').textContent=found?`Done! ${found} scene visual(s) ready. Check image rights/attribution before publishing.`:'No matching images found. Try simpler story sentences or upload your own photos.';
+  $('tvAutoInfo').textContent=found?`Done! ${found} scene visual(s) ready. Check image rights/attribution before publishing.`:'No images loaded. Check your internet connection and try again, or upload your own photos.';
   drawScene(scenes[0],0,scenes.length,$('tvStyle').value,0);button.disabled=false;
  });
  $('tvMusic').addEventListener('change',e=>{if(musicUrl)URL.revokeObjectURL(musicUrl);const f=e.target.files[0];if(!f)return;musicUrl=URL.createObjectURL(f);music.src=musicUrl;$('tvMusicInfo').textContent=f.name;});
